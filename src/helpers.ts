@@ -129,20 +129,29 @@ export function computeCroppedArea(
     )
   )
   const isImgWiderThanHigh = mediaNaturalBBoxSize.width >= mediaNaturalBBoxSize.height * aspect
-
-  // then we ensure the width and height exactly match the aspect (to avoid rounding approximations)
-  // if the media is wider than high, when zoom is 0, the crop height will be equals to image height
-  // thus we want to compute the width from the height and aspect for accuracy.
-  // Otherwise, we compute the height from width and aspect.
-  const sizePixels = isImgWiderThanHigh
-    ? {
-        width: Math.round(heightInPixels * aspect),
-        height: heightInPixels,
-      }
-    : {
-        width: widthInPixels,
-        height: Math.round(widthInPixels / aspect),
-      }
+  const isImageCropedAreaSmallerThanCropSize =
+    widthInPixels * zoom * mediaSize.naturalWidth / mediaSize.width - cropSize.width < Number.EPSILON ||
+    heightInPixels * zoom - cropSize.height < Number.EPSILON
+  
+  let sizePixels = {
+    width: widthInPixels,
+    height: heightInPixels,
+  }
+  if (!isImageCropedAreaSmallerThanCropSize) {
+    // then we ensure the width and height exactly match the aspect (to avoid rounding approximations)
+    // if the media is wider than high, when zoom is 0, the crop height will be equals to image height
+    // thus we want to compute the width from the height and aspect for accuracy.
+    // Otherwise, we compute the height from width and aspect.
+    sizePixels = isImgWiderThanHigh
+      ? {
+          width: Math.round(heightInPixels * aspect),
+          height: heightInPixels,
+        }
+      : {
+          width: widthInPixels,
+          height: Math.round(widthInPixels / aspect),
+        }
+  }
 
   const croppedAreaPixels = {
     ...sizePixels,
